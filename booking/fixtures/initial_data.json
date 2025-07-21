@@ -1,0 +1,16 @@
+[
+  {
+    "model": "booking.activity",
+    "pk": 1,
+    "fields": {
+      "name": "Cricket"
+    }
+  },
+  {
+    "model": "booking.activity",
+    "pk": 2,
+    "fields": {
+      "name": "Pickle Ball"
+    }
+  }
+] 
