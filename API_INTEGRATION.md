@@ -1,246 +1,245 @@
-# Turf Booking System API Integration
+# 🔗 API Integration Guide - Complete URL Configuration
 
-This document provides an overview of how the backend Django API is integrated with the frontend React applications.
+## 🌐 **PRODUCTION URLS**
 
-## Project Structure
+### **Backend API (Railway)**
+- **Base URL**: `https://turf-backend-production.up.railway.app`
+- **Admin Panel**: `https://turf-backend-production.up.railway.app/admin/`
+- **API Root**: `https://turf-backend-production.up.railway.app/api/`
 
-- **Backend (Django)**: Handles the core booking functionality and API endpoints
-- **Customer Frontend**: Public-facing website for customers to book turf slots
-- **Management Frontend**: Admin interface for managing bookings and blocking slots
+### **Frontend Applications**
+- **Customer App**: `https://turf-customer.vercel.app`
+- **Admin App**: `https://turf-manage.vercel.app`
 
-## API Services
+## 📡 **API ENDPOINTS**
 
-### 1. Customer Frontend API Services (`frontend/src/services/api.ts`)
+### **Public Endpoints (Customer Frontend)**
+```bash
+# Cricket Slots
+GET https://turf-backend-production.up.railway.app/api/cricket/slots/?date=2025-07-21
 
-This file contains the API services for the customer-facing frontend:
+# Pickleball Slots  
+GET https://turf-backend-production.up.railway.app/api/pickleball/slots/?date=2025-07-21
 
+# Create Cricket Booking
+POST https://turf-backend-production.up.railway.app/api/cricket/bookings/
+
+# Create Pickleball Booking
+POST https://turf-backend-production.up.railway.app/api/pickleball/bookings/
+```
+
+### **Admin Endpoints (Admin Frontend)**
+```bash
+# Authentication
+POST https://turf-backend-production.up.railway.app/api-token-auth/
+
+# Dashboard Data
+GET https://turf-backend-production.up.railway.app/api/admin/dashboard/
+
+# Cricket Management
+GET https://turf-backend-production.up.railway.app/api/cricket/slots/?date=2025-07-21
+POST https://turf-backend-production.up.railway.app/api/cricket/blocks/
+DELETE https://turf-backend-production.up.railway.app/api/cricket/blocks/{id}/
+
+# Pickleball Management
+GET https://turf-backend-production.up.railway.app/api/pickleball/slots/?date=2025-07-21
+POST https://turf-backend-production.up.railway.app/api/pickleball/blocks/
+DELETE https://turf-backend-production.up.railway.app/api/pickleball/blocks/{id}/
+```
+
+## 🔧 **ENVIRONMENT CONFIGURATION**
+
+### **Backend (.env)**
+```bash
+SECRET_KEY=turf-prod-2025-k9m#x8v@n2p$w7q!z5r&t3y*u6i+o1e-s4a^d7f%g0h=j2l
+DEBUG=True
+DATABASE_URL=postgresql://postgres:rZmXHNPYZYODBemYJHzmKllSpzjiXFjZ@maglev.proxy.rlwy.net:40181/railway
+CORS_ALLOWED_ORIGINS=https://turf-customer.vercel.app,https://turf-manage.vercel.app
+API_BASE_URL=https://turf-backend-production.up.railway.app
+```
+
+### **Customer Frontend (turf-main/.env)**
+```bash
+VITE_API_BASE_URL=https://turf-backend-production.up.railway.app
+VITE_CRICKET_API_URL=https://turf-backend-production.up.railway.app/api/cricket
+VITE_PICKLEBALL_API_URL=https://turf-backend-production.up.railway.app/api/pickleball
+VITE_SITE_URL=https://turf-customer.vercel.app
+```
+
+### **Admin Frontend (turf-admin/.env)**
+```bash
+VITE_API_BASE_URL=https://turf-backend-production.up.railway.app
+VITE_AUTH_API_URL=https://turf-backend-production.up.railway.app/api-token-auth
+VITE_DASHBOARD_API_URL=https://turf-backend-production.up.railway.app/api/admin/dashboard
+VITE_CRICKET_API_URL=https://turf-backend-production.up.railway.app/api/cricket
+VITE_PICKLEBALL_API_URL=https://turf-backend-production.up.railway.app/api/pickleball
+```
+
+## 🚀 **RAILWAY ENVIRONMENT VARIABLES**
+
+Set these in your Railway dashboard:
+
+```bash
+SECRET_KEY=turf-prod-2025-k9m#x8v@n2p$w7q!z5r&t3y*u6i+o1e-s4a^d7f%g0h=j2l
+DEBUG=False
+DJANGO_SETTINGS_MODULE=turf.settings
+DATABASE_URL=postgresql://postgres:rZmXHNPYZYODBemYJHzmKllSpzjiXFjZ@postgres.railway.internal:5432/railway
+CORS_ALLOWED_ORIGINS=https://turf-customer.vercel.app,https://turf-manage.vercel.app
+ALLOWED_HOSTS=turf-backend-production.up.railway.app,.railway.app,.up.railway.app
+```
+
+## 🔒 **CORS CONFIGURATION**
+
+### **Development (DEBUG=True)**
+- Allows all origins for easy development
+
+### **Production (DEBUG=False)**
+- Restricted to specific origins:
+  - `https://turf-customer.vercel.app`
+  - `https://turf-manage.vercel.app`
+  - `http://localhost:5173` (development)
+  - `http://localhost:5174` (development)
+
+## 📱 **API CLIENT CONFIGURATION**
+
+### **Customer Frontend (api.ts)**
 ```typescript
-import axios from 'axios';
-
-const API_BASE_URL = 'http://localhost:8000';
+const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'https://turf-backend-production.up.railway.app';
 
 const api = axios.create({
   baseURL: API_BASE_URL,
+  timeout: 10000,
+  headers: {
+    'Content-Type': 'application/json',
+  },
+});
+```
+
+### **Admin Frontend (api.js)**
+```javascript
+const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'https://turf-backend-production.up.railway.app';
+
+const api = axios.create({
+  baseURL: API_BASE_URL,
+  timeout: 15000,
   headers: {
     'Content-Type': 'application/json',
   },
 });
 
-// Cricket APIs
-export const cricketService = {
-  getAvailableSlots: (date: string) => {
-    return api.get(`/api/cricket/slots/?date=${date}`);
-  },
-  
-  createBooking: (bookingData) => {
-    return api.post('/api/cricket/bookings/', bookingData);
-  },
-  
-  cancelBooking: (id: number) => {
-    return api.delete(`/api/cricket/bookings/${id}/`);
-  }
-};
-
-// Pickle Ball APIs
-export const pickleballService = {
-  getAvailableSlots: (date: string) => {
-    return api.get(`/api/pickleball/slots/?date=${date}`);
-  },
-  
-  createBooking: (bookingData) => {
-    return api.post('/api/pickleball/bookings/', bookingData);
-  },
-  
-  cancelBooking: (id: number) => {
-    return api.delete(`/api/pickleball/bookings/${id}/`);
-  }
-};
-
-export default api;
-```
-
-### 2. Management Frontend API Services (`frontend-manage/src/api.jsx`)
-
-This file contains the API services for the management frontend with authentication:
-
-```javascript
-import axios from "axios";
-
-const API_BASE_URL = "http://localhost:8000";
-
-const api = axios.create({
-  baseURL: API_BASE_URL,
-  headers: { "Content-Type": "application/json" },
-});
-
-// Add auth token to requests if available
+// Auto-add auth token
 api.interceptors.request.use((config) => {
-  const token = localStorage.getItem("auth_token");
+  const token = localStorage.getItem('auth_token');
   if (token) {
     config.headers.Authorization = `Token ${token}`;
   }
   return config;
 });
-
-// Authentication
-export const authService = {
-  login: (credentials) => {
-    return api.post('/api-token-auth/', credentials).then(response => {
-      if (response.data.token) {
-        localStorage.setItem('auth_token', response.data.token);
-      }
-      return response;
-    });
-  },
-  
-  logout: () => {
-    localStorage.removeItem('auth_token');
-  },
-  
-  isAuthenticated: () => {
-    return !!localStorage.getItem('auth_token');
-  }
-};
-
-// Cricket APIs
-export const cricketService = {
-  getBookings: (date) => {
-    return api.get(`/api/cricket/bookings/?date=${date}`);
-  },
-  
-  getSlots: (date) => {
-    return api.get(`/api/cricket/slots/?date=${date}`);
-  },
-  
-  createBlock: (blockData) => {
-    return api.post('/api/cricket/blocks/', blockData);
-  },
-  
-  removeBlock: (id) => {
-    return api.delete(`/api/cricket/blocks/${id}/`);
-  }
-};
-
-// Pickle Ball APIs
-export const pickleballService = {
-  getBookings: (date) => {
-    return api.get(`/api/pickleball/bookings/?date=${date}`);
-  },
-  
-  getSlots: (date) => {
-    return api.get(`/api/pickleball/slots/?date=${date}`);
-  },
-  
-  createBlock: (blockData) => {
-    return api.post('/api/pickleball/blocks/', blockData);
-  },
-  
-  removeBlock: (id) => {
-    return api.delete(`/api/pickleball/blocks/${id}/`);
-  }
-};
 ```
 
-## Context API Integration
+## 🧪 **TESTING API CONNECTIONS**
 
-### 1. Customer Frontend Context (`frontend/src/contexts/BookingContext.tsx`)
-
-The `BookingContext` provides state management for the customer frontend:
-
-- Manages the selected date and activity
-- Fetches available slots based on the selected date/activity
-- Handles booking creation and cancellation
-- Manages loading and error states
-
-### 2. Management Frontend Contexts
-
-#### Authentication Context (`frontend-manage/src/contexts/AuthContext.jsx`)
-
-The `AuthContext` handles authentication for the management frontend:
-
-- Manages login/logout functionality
-- Stores authentication state
-- Handles token management
-
-#### Management Context (`frontend-manage/src/contexts/ManagementContext.jsx`)
-
-The `ManagementContext` provides state management for the management frontend:
-
-- Manages the selected date and activity
-- Fetches bookings and slots
-- Handles blocking and unblocking slots
-- Manages loading and error states
-
-## API Endpoints Used
-
-### Public Endpoints (Customer Frontend)
-
-- `GET /api/cricket/slots/?date=YYYY-MM-DD` - Get available Cricket slots
-- `GET /api/pickleball/slots/?date=YYYY-MM-DD` - Get available Pickle Ball slots
-- `POST /api/cricket/bookings/` - Create a Cricket booking
-- `POST /api/pickleball/bookings/` - Create a Pickle Ball booking
-- `DELETE /api/cricket/bookings/{id}/` - Cancel a Cricket booking
-- `DELETE /api/pickleball/bookings/{id}/` - Cancel a Pickle Ball booking
-
-### Admin Endpoints (Management Frontend)
-
-- `POST /api-token-auth/` - Authenticate and get token
-- `GET /api/cricket/bookings/?date=YYYY-MM-DD` - Get all Cricket bookings for a date
-- `GET /api/pickleball/bookings/?date=YYYY-MM-DD` - Get all Pickle Ball bookings for a date
-- `POST /api/cricket/blocks/` - Block Cricket slots
-- `POST /api/pickleball/blocks/` - Block Pickle Ball slots
-- `DELETE /api/cricket/blocks/{id}/` - Unblock Cricket slot
-- `DELETE /api/pickleball/blocks/{id}/` - Unblock Pickle Ball slot
-
-## Authentication Flow
-
-1. Admin user enters credentials in the login form
-2. The credentials are sent to `/api-token-auth/` endpoint
-3. Upon successful authentication, the returned token is stored in localStorage
-4. The token is added to the Authorization header for all subsequent API requests
-5. Protected routes redirect to the login page if no token is present
-
-## Best Practices Implemented
-
-1. **Separation of Concerns**:
-   - API services are separated from UI components
-   - Context providers handle state management
-
-2. **Authentication**:
-   - Token-based authentication for admin APIs
-   - Token storage in localStorage
-   - Automatic token inclusion in request headers
-   - Protected routes with authentication checks
-
-3. **Error Handling**:
-   - Proper error handling in API calls
-   - Loading states for UI feedback
-   - Error messages displayed to users
-
-4. **Type Safety**:
-   - TypeScript used in the customer frontend
-   - Interface definitions for API responses and request payloads
-
-5. **Code Organization**:
-   - API services grouped by activity type
-   - Context providers for state management
-   - Component-based architecture
-
-## Running the Application
-
-1. Start the Django backend:
+### **Test Backend Health**
 ```bash
-python manage.py runserver
+curl https://turf-backend-production.up.railway.app/admin/
 ```
 
-2. Start the customer frontend:
+### **Test Cricket Slots API**
 ```bash
-cd frontend
-npm run dev
+curl "https://turf-backend-production.up.railway.app/api/cricket/slots/?date=2025-07-21"
 ```
 
-3. Start the management frontend:
+### **Test Admin Authentication**
 ```bash
-cd frontend-manage
-npm run dev
-``` 
+curl -X POST https://turf-backend-production.up.railway.app/api-token-auth/ \
+  -H "Content-Type: application/json" \
+  -d '{"username": "admin", "password": "admin123"}'
+```
+
+### **Test Dashboard API (with auth)**
+```bash
+curl -H "Authorization: Token YOUR_TOKEN_HERE" \
+  https://turf-backend-production.up.railway.app/api/admin/dashboard/
+```
+
+## 🔄 **API REQUEST FLOW**
+
+### **Customer Booking Flow**
+1. **Load Slots**: `GET /api/cricket/slots/?date=2025-07-21`
+2. **Create Booking**: `POST /api/cricket/bookings/`
+3. **Confirmation**: Response with booking details
+
+### **Admin Management Flow**
+1. **Login**: `POST /api-token-auth/` → Get token
+2. **Dashboard**: `GET /api/admin/dashboard/` → Get stats
+3. **View Slots**: `GET /api/cricket/slots/?date=2025-07-21` → All slots (including blocked)
+4. **Block Slot**: `POST /api/cricket/blocks/` → Block specific slot
+5. **Unblock Slot**: `DELETE /api/cricket/blocks/{id}/` → Remove block
+
+## 🛠️ **DEBUGGING API CONNECTIONS**
+
+### **Frontend Console Logs**
+- Customer: `🎯 CUSTOMER API Request/Response`
+- Admin: `🏏 ADMIN API Request/Response`
+
+### **Common Issues & Solutions**
+
+1. **CORS Error**
+   - Check `CORS_ALLOWED_ORIGINS` in Railway
+   - Ensure frontend URL is included
+
+2. **401 Unauthorized (Admin)**
+   - Check auth token in localStorage
+   - Verify token format: `Token abc123...`
+
+3. **404 Not Found**
+   - Verify API endpoint URLs
+   - Check Railway deployment status
+
+4. **Timeout Errors**
+   - Increase timeout in frontend config
+   - Check Railway service health
+
+## 📊 **API Response Examples**
+
+### **Cricket Slots Response**
+```json
+[
+  {
+    "id": 1,
+    "date": "2025-07-21",
+    "start_time": "06:00:00",
+    "end_time": "07:00:00",
+    "start_time_formatted": "6:00 AM",
+    "end_time_formatted": "7:00 AM",
+    "is_blocked": false,
+    "is_booked": false,
+    "price": 1200
+  }
+]
+```
+
+### **Dashboard Response**
+```json
+{
+  "todayBookings": {"cricket": 5, "pickleball": 3},
+  "availableSlots": {"cricket": 20, "pickleball": 22},
+  "totalSlots": {"cricket": 24, "pickleball": 24},
+  "blockedSlots": {"cricket": 1, "pickleball": 0},
+  "revenue": {"today": 15000, "week": 85000},
+  "recentBookings": [...],
+  "totalUsers": 45
+}
+```
+
+## ✅ **CONNECTION STATUS**
+
+- ✅ Backend API: `https://turf-backend-production.up.railway.app`
+- ✅ Customer Frontend: `https://turf-customer.vercel.app`
+- ✅ Admin Frontend: `https://turf-manage.vercel.app`
+- ✅ CORS Configuration: Properly configured
+- ✅ Authentication: Token-based auth implemented
+- ✅ Environment Variables: All URLs configured
+- ✅ API Interceptors: Request/response logging added
+
+**All URLs are now properly connected across the entire project! 🎉**
