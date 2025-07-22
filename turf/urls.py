@@ -17,9 +17,25 @@ Including another URLconf
 
 from django.contrib import admin
 from django.urls import path, include
+from django.http import JsonResponse
 from rest_framework.authtoken import views as token_views
 
+def health_check(request):
+    return JsonResponse({
+        'status': 'healthy',
+        'message': 'Turf Booking API is running!',
+        'endpoints': {
+            'admin': '/admin/',
+            'cricket_slots': '/api/cricket/slots/',
+            'pickleball_slots': '/api/pickleball/slots/',
+            'dashboard': '/api/admin/dashboard/',
+            'auth': '/api-token-auth/'
+        }
+    })
+
 urlpatterns = [
+    path('', health_check, name='health_check'),
+    path('health/', health_check, name='health_check_alt'),
     path('admin/', admin.site.urls),
     path('', include('booking.urls')),
     path('api-token-auth/', token_views.obtain_auth_token),

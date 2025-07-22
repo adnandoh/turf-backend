@@ -36,11 +36,17 @@ ALLOWED_HOSTS = [
     '127.0.0.1',
     '.railway.app',  # Railway domain
     '.up.railway.app',  # Railway custom domains
+    'turf-backend-production.up.railway.app',  # Your specific Railway URL
 ]
 
 # Add any custom domain if provided
 if os.environ.get('RAILWAY_PUBLIC_DOMAIN'):
     ALLOWED_HOSTS.append(os.environ.get('RAILWAY_PUBLIC_DOMAIN'))
+
+# Add ALLOWED_HOSTS from environment variable
+allowed_hosts_env = os.environ.get('ALLOWED_HOSTS', '')
+if allowed_hosts_env:
+    ALLOWED_HOSTS.extend([host.strip() for host in allowed_hosts_env.split(',') if host.strip()])
 
 
 # Application definition
@@ -182,9 +188,9 @@ STATIC_URL = "/static/"
 STATIC_ROOT = os.path.join(BASE_DIR, 'staticfiles')
 
 # Additional locations of static files
-STATICFILES_DIRS = [
-    os.path.join(BASE_DIR, 'static'),
-]
+# STATICFILES_DIRS = [
+#     os.path.join(BASE_DIR, 'static'),
+# ]
 
 # Whitenoise for serving static files on Railway
 MIDDLEWARE.insert(1, 'whitenoise.middleware.WhiteNoiseMiddleware')
