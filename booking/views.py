@@ -163,15 +163,15 @@ class CricketBookingViewSet(BookingViewSet):
 class CricketBlockViewSet(BlockViewSet):
     activity_name = "Cricket"
 
-# Pickle Ball specific viewsets
-class PickleBallSlotViewSet(SlotViewSet):
-    activity_name = "Pickle Ball"
+# Pickleball specific viewsets
+class PickleballSlotViewSet(SlotViewSet):
+    activity_name = "Pickleball"
 
-class PickleBallBookingViewSet(BookingViewSet):
-    activity_name = "Pickle Ball"
+class PickleballBookingViewSet(BookingViewSet):
+    activity_name = "Pickleball"
 
-class PickleBallBlockViewSet(BlockViewSet):
-    activity_name = "Pickle Ball"
+class PickleballBlockViewSet(BlockViewSet):
+    activity_name = "Pickleball"
 
 # Admin Dashboard API
 @api_view(['GET'])
@@ -186,7 +186,7 @@ def admin_dashboard(request):
     
     # Get activities
     cricket = get_object_or_404(Activity, name="Cricket")
-    pickleball = get_object_or_404(Activity, name="Pickle Ball")
+    pickleball = get_object_or_404(Activity, name="Pickleball")
     
     # Today's bookings
     today_cricket_bookings = Booking.objects.filter(

@@ -8,11 +8,11 @@ cricket_router.register(r'slots', views.CricketSlotViewSet, basename='cricket-sl
 cricket_router.register(r'bookings', views.CricketBookingViewSet, basename='cricket-bookings')
 cricket_router.register(r'blocks', views.CricketBlockViewSet, basename='cricket-blocks')
 
-# Pickle Ball routers
+# Pickleball routers
 pickleball_router = DefaultRouter()
-pickleball_router.register(r'slots', views.PickleBallSlotViewSet, basename='pickleball-slots')
-pickleball_router.register(r'bookings', views.PickleBallBookingViewSet, basename='pickleball-bookings')
-pickleball_router.register(r'blocks', views.PickleBallBlockViewSet, basename='pickleball-blocks')
+pickleball_router.register(r'slots', views.PickleballSlotViewSet, basename='pickleball-slots')
+pickleball_router.register(r'bookings', views.PickleballBookingViewSet, basename='pickleball-bookings')
+pickleball_router.register(r'blocks', views.PickleballBlockViewSet, basename='pickleball-blocks')
 
 urlpatterns = [
     path('api/cricket/', include(cricket_router.urls)),

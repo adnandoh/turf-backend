@@ -25,7 +25,7 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 SECRET_KEY = os.environ.get('SECRET_KEY', 'django-insecure-l0-##vkk5#unyvs0h-ojyn37ta#%$q4t5#apf8a9n7x6x(y0(=')
 
 # SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = os.environ.get('DEBUG', 'False').lower() == 'true'
+DEBUG = os.environ.get('DEBUG', 'True').lower() == 'true'
 
 # Railway deployment settings
 RAILWAY_STATIC_URL = os.environ.get('RAILWAY_STATIC_URL')
@@ -68,20 +68,53 @@ INSTALLED_APPS = [
 
 MIDDLEWARE = [
     "django.middleware.security.SecurityMiddleware",
-    "whitenoise.middleware.WhiteNoiseMiddleware",  # Move WhiteNoise here for proper static file handling
-    "django.contrib.sessions.middleware.SessionMiddleware",
     "corsheaders.middleware.CorsMiddleware",  # CORS middleware - must be before CommonMiddleware
+    "whitenoise.middleware.WhiteNoiseMiddleware",  # WhiteNoise after security but before other middleware
+    "django.contrib.sessions.middleware.SessionMiddleware",
     "django.middleware.common.CommonMiddleware",
     "django.middleware.csrf.CsrfViewMiddleware",
+    "booking.middleware.CSRFExemptMiddleware",  # Custom middleware to exempt certain URLs from CSRF
     "django.contrib.auth.middleware.AuthenticationMiddleware",
     "django.contrib.messages.middleware.MessageMiddleware",
     "django.middleware.clickjacking.XFrameOptionsMiddleware",
 ]
 
-# CORS settings - Allow all origins (not secure but more accessible)
-CORS_ALLOW_ALL_ORIGINS = True
+# CORS settings - Secure configuration with specific allowed origins only
+CORS_ALLOW_ALL_ORIGINS = False
 
-CORS_ALLOW_CREDENTIALS = True
+# Define allowed origins based on environment
+if DEBUG:
+    # Local development origins - only specific ports
+    CORS_ALLOWED_ORIGINS = [
+        "http://localhost:5173",  # Customer frontend (turf-main)
+        "http://localhost:5174",  # Admin frontend (turf-admin)
+        "http://127.0.0.1:5173",
+        "http://127.0.0.1:5174",
+    ]
+    
+    # Add these settings for local development
+    CORS_ALLOW_CREDENTIALS = True
+    CORS_ALLOW_HEADERS = [
+        'accept',
+        'accept-encoding',
+        'authorization',
+        'content-type',
+        'dnt',
+        'origin',
+        'user-agent',
+        'x-csrftoken',
+        'x-requested-with',
+    ]
+    # Explicitly add CORS preflight headers
+    CORS_EXPOSE_HEADERS = ['Content-Type', 'X-CSRFToken']
+    CORS_PREFLIGHT_MAX_AGE = 86400  # 24 hours
+else:
+    # Production origins - only your deployed frontends
+    CORS_ALLOWED_ORIGINS = [
+        "https://turf-customer.vercel.app",
+        "https://turf-manage.vercel.app",
+    ]
+
 CORS_ALLOW_METHODS = [
     'DELETE',
     'GET',
@@ -89,17 +122,6 @@ CORS_ALLOW_METHODS = [
     'PATCH',
     'POST',
     'PUT',
-]
-CORS_ALLOW_HEADERS = [
-    'accept',
-    'accept-encoding',
-    'authorization',
-    'content-type',
-    'dnt',
-    'origin',
-    'user-agent',
-    'x-csrftoken',
-    'x-requested-with',
 ]
 
 ROOT_URLCONF = "turf.urls"
@@ -249,3 +271,14 @@ REST_FRAMEWORK = {
     'DEFAULT_PAGINATION_CLASS': 'rest_framework.pagination.PageNumberPagination',
     'PAGE_SIZE': 10,
 }
+
+# CSRF settings
+CSRF_TRUSTED_ORIGINS = [
+    'http://localhost:5173',
+    'http://localhost:5174',
+    'http://127.0.0.1:5173',
+    'http://127.0.0.1:5174',
+]
+
+# Exempt token authentication endpoint from CSRF protection
+CSRF_EXEMPT_URLS = [r'^api-token-auth/$']

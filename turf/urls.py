@@ -19,6 +19,7 @@ from django.contrib import admin
 from django.urls import path, include
 from django.http import JsonResponse
 from rest_framework.authtoken import views as token_views
+from django.views.decorators.csrf import csrf_exempt
 
 def health_check(request):
     import os
@@ -70,5 +71,5 @@ urlpatterns = [
     path('api/', health_check, name='api_health_check'),
     path('admin/', admin.site.urls),
     path('', include('booking.urls')),
-    path('api-token-auth/', token_views.obtain_auth_token),
+    path('api-token-auth/', csrf_exempt(token_views.obtain_auth_token)),
 ]
