@@ -22,14 +22,38 @@ from rest_framework.authtoken import views as token_views
 
 def health_check(request):
     import os
+    
+    # Test database connection
+    db_status = "unknown"
+    try:
+        from django.db import connection
+        with connection.cursor() as cursor:
+            cursor.execute("SELECT version()")
+            result = cursor.fetchone()
+            db_status = f"connected - {result[0][:50]}..."
+    except Exception as e:
+        db_status = f"error: {str(e)}"
+    
+    # Test models
+    model_status = "unknown"
+    try:
+        from booking.models import Activity
+        activity_count = Activity.objects.count()
+        model_status = f"working - {activity_count} activities"
+    except Exception as e:
+        model_status = f"error: {str(e)}"
+    
     return JsonResponse({
         'status': 'healthy',
         'message': 'Turf Booking API is running!',
+        'database': db_status,
+        'models': model_status,
         'debug_info': {
             'django_version': '4.2.10',
             'environment': 'production' if not os.environ.get('DEBUG', 'True').lower() == 'true' else 'development',
             'railway_commit': os.environ.get('RAILWAY_GIT_COMMIT_SHA', 'unknown'),
             'allowed_hosts': os.environ.get('ALLOWED_HOSTS', 'default'),
+            'database_url_set': 'yes' if os.environ.get('DATABASE_URL') else 'no',
         },
         'endpoints': {
             'admin': '/admin/',

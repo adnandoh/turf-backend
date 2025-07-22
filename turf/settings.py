@@ -133,25 +133,39 @@ if DATABASE_URL:
     # Production/Railway environment - use PostgreSQL
     try:
         DATABASES = {
-            'default': dj_database_url.parse(DATABASE_URL, conn_max_age=600)
+            'default': dj_database_url.parse(DATABASE_URL, conn_max_age=600, conn_health_checks=True)
         }
-        # Ensure SSL is properly configured for Railway
-        DATABASES['default']['OPTIONS'] = {
+        # Clean up any invalid options that might cause PostgreSQL errors
+        if 'OPTIONS' not in DATABASES['default']:
+            DATABASES['default']['OPTIONS'] = {}
+        
+        # Only add valid PostgreSQL options
+        DATABASES['default']['OPTIONS'].update({
             'sslmode': 'require',
-        }
+            'connect_timeout': 10,
+        })
+        
+        # Remove any invalid parameters that might be causing the db_type error
+        invalid_params = ['db_type', 'type', 'database_type']
+        for param in invalid_params:
+            DATABASES['default'].pop(param, None)
+            if 'OPTIONS' in DATABASES['default']:
+                DATABASES['default']['OPTIONS'].pop(param, None)
+                
     except Exception as e:
         print(f"Database configuration error: {e}")
-        # Fallback configuration
+        # Fallback configuration for Railway
         DATABASES = {
             'default': {
                 'ENGINE': 'django.db.backends.postgresql',
-                'NAME': 'railway',
-                'USER': 'postgres',
-                'PASSWORD': 'rZmXHNPYZYODBemYJHzmKllSpzjiXFjZ',
-                'HOST': 'postgres.railway.internal',
-                'PORT': '5432',
+                'NAME': os.environ.get('PGDATABASE', 'railway'),
+                'USER': os.environ.get('PGUSER', 'postgres'),
+                'PASSWORD': os.environ.get('PGPASSWORD', 'rZmXHNPYZYODBemYJHzmKllSpzjiXFjZ'),
+                'HOST': os.environ.get('PGHOST', 'postgres.railway.internal'),
+                'PORT': os.environ.get('PGPORT', '5432'),
                 'OPTIONS': {
                     'sslmode': 'require',
+                    'connect_timeout': 10,
                 },
             }
         }
@@ -160,13 +174,14 @@ else:
     DATABASES = {
         'default': {
             'ENGINE': 'django.db.backends.postgresql',
-            'NAME': 'turf_project',
-            'USER': 'postgres',
-            'PASSWORD': 'adnan12',
-            'HOST': 'localhost',
-            'PORT': '5432',
+            'NAME': os.environ.get('DB_NAME', 'turf_project'),
+            'USER': os.environ.get('DB_USER', 'postgres'),
+            'PASSWORD': os.environ.get('DB_PASSWORD', 'adnan12'),
+            'HOST': os.environ.get('DB_HOST', 'localhost'),
+            'PORT': os.environ.get('DB_PORT', '5432'),
             'OPTIONS': {
                 'client_encoding': 'UTF8',
+                'connect_timeout': 10,
             },
         }
     }

@@ -39,4 +39,4 @@ HEALTHCHECK --interval=30s --timeout=30s --start-period=5s --retries=3 \
     CMD curl -f http://localhost:$PORT/admin/ || exit 1
 
 # Default command (can be overridden by Railway)
-CMD ["sh", "-c", "python manage.py migrate && python manage.py collectstatic --noinput && gunicorn turf.wsgi:application --bind 0.0.0.0:$PORT --workers 2 --timeout 120 --log-level info --access-logfile - --error-logfile - --preload"]
+CMD ["sh", "-c", "python railway_env_cleanup.py && python manage.py migrate && python manage.py collectstatic --noinput && gunicorn turf.wsgi:application --bind 0.0.0.0:$PORT --workers 1 --timeout 120 --log-level info --access-logfile - --error-logfile - --preload"]
