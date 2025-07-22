@@ -25,7 +25,7 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 SECRET_KEY = os.environ.get('SECRET_KEY', 'django-insecure-l0-##vkk5#unyvs0h-ojyn37ta#%$q4t5#apf8a9n7x6x(y0(=')
 
 # SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = os.environ.get('DEBUG', 'True').lower() == 'true'
+DEBUG = os.environ.get('DEBUG', 'False').lower() == 'true'
 
 # Railway deployment settings
 RAILWAY_STATIC_URL = os.environ.get('RAILWAY_STATIC_URL')
@@ -68,6 +68,7 @@ INSTALLED_APPS = [
 
 MIDDLEWARE = [
     "django.middleware.security.SecurityMiddleware",
+    "whitenoise.middleware.WhiteNoiseMiddleware",  # Move WhiteNoise here for proper static file handling
     "django.contrib.sessions.middleware.SessionMiddleware",
     "corsheaders.middleware.CorsMiddleware",  # CORS middleware - must be before CommonMiddleware
     "django.middleware.common.CommonMiddleware",
@@ -125,27 +126,41 @@ WSGI_APPLICATION = "turf.wsgi.application"
 # Database
 # https://docs.djangoproject.com/en/5.0/ref/settings/#databases
 
-# PostgreSQL Database Configuration for Railway
+# Database Configuration
 DATABASE_URL = os.environ.get('DATABASE_URL')
 
 if DATABASE_URL:
     # Production/Railway environment - use PostgreSQL
-    DATABASES = {
-        'default': dj_database_url.parse(DATABASE_URL)
-    }
+    try:
+        DATABASES = {
+            'default': dj_database_url.parse(DATABASE_URL, conn_max_age=600)
+        }
+        # Ensure SSL is properly configured for Railway
+        DATABASES['default']['OPTIONS'] = {
+            'sslmode': 'require',
+        }
+    except Exception as e:
+        print(f"Database configuration error: {e}")
+        # Fallback configuration
+        DATABASES = {
+            'default': {
+                'ENGINE': 'django.db.backends.postgresql',
+                'NAME': 'railway',
+                'USER': 'postgres',
+                'PASSWORD': 'rZmXHNPYZYODBemYJHzmKllSpzjiXFjZ',
+                'HOST': 'postgres.railway.internal',
+                'PORT': '5432',
+                'OPTIONS': {
+                    'sslmode': 'require',
+                },
+            }
+        }
 else:
-    # Local development - use your Railway PostgreSQL for consistency
+    # Local development - use SQLite for simplicity
     DATABASES = {
         'default': {
-            'ENGINE': 'django.db.backends.postgresql',
-            'NAME': 'railway',
-            'USER': 'postgres',
-            'PASSWORD': 'rZmXHNPYZYODBemYJHzmKllSpzjiXFjZ',
-            'HOST': 'maglev.proxy.rlwy.net',
-            'PORT': '40181',
-            'OPTIONS': {
-                'sslmode': 'require',
-            },
+            'ENGINE': 'django.db.backends.sqlite3',
+            'NAME': BASE_DIR / 'db.sqlite3',
         }
     }
 
@@ -193,7 +208,6 @@ STATIC_ROOT = os.path.join(BASE_DIR, 'staticfiles')
 # ]
 
 # Whitenoise for serving static files on Railway
-MIDDLEWARE.insert(1, 'whitenoise.middleware.WhiteNoiseMiddleware')
 STATICFILES_STORAGE = 'whitenoise.storage.CompressedManifestStaticFilesStorage'
 
 # Default primary key field type

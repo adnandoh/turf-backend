@@ -1,1 +1,1 @@
-web: gunicorn turf.wsgi --log-file -
+web: python manage.py migrate && gunicorn turf.wsgi:application --bind 0.0.0.0:$PORT --workers 1 --timeout 120 --log-level info

@@ -21,9 +21,16 @@ from django.http import JsonResponse
 from rest_framework.authtoken import views as token_views
 
 def health_check(request):
+    import os
     return JsonResponse({
         'status': 'healthy',
         'message': 'Turf Booking API is running!',
+        'debug_info': {
+            'django_version': '4.2.10',
+            'environment': 'production' if not os.environ.get('DEBUG', 'True').lower() == 'true' else 'development',
+            'railway_commit': os.environ.get('RAILWAY_GIT_COMMIT_SHA', 'unknown'),
+            'allowed_hosts': os.environ.get('ALLOWED_HOSTS', 'default'),
+        },
         'endpoints': {
             'admin': '/admin/',
             'cricket_slots': '/api/cricket/slots/',
@@ -36,6 +43,7 @@ def health_check(request):
 urlpatterns = [
     path('', health_check, name='health_check'),
     path('health/', health_check, name='health_check_alt'),
+    path('api/', health_check, name='api_health_check'),
     path('admin/', admin.site.urls),
     path('', include('booking.urls')),
     path('api-token-auth/', token_views.obtain_auth_token),
