@@ -156,11 +156,18 @@ if DATABASE_URL:
             }
         }
 else:
-    # Local development - use SQLite for simplicity
+    # Local development - use PostgreSQL
     DATABASES = {
         'default': {
-            'ENGINE': 'django.db.backends.sqlite3',
-            'NAME': BASE_DIR / 'db.sqlite3',
+            'ENGINE': 'django.db.backends.postgresql',
+            'NAME': 'turf_project',
+            'USER': 'postgres',
+            'PASSWORD': 'adnan12',
+            'HOST': 'localhost',
+            'PORT': '5432',
+            'OPTIONS': {
+                'client_encoding': 'UTF8',
+            },
         }
     }
 
