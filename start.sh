@@ -108,6 +108,12 @@ else:
 echo "📦 Collecting static files..."
 python manage.py collectstatic --noinput --clear
 
+# Create debug files in static directory for troubleshooting
+echo "🔧 Creating debugging files..."
+echo "Server is starting on PORT=$PORT" > /app/staticfiles/debug.txt
+echo "$(date)" > /app/staticfiles/startup_time.txt
+echo "ALLOWED_HOSTS=$ALLOWED_HOSTS" > /app/staticfiles/env_debug.txt
+
 # Start gunicorn
 echo "🌟 Starting Gunicorn server on port $PORT..."
 echo "🔗 Binding to 0.0.0.0:$PORT"
@@ -115,9 +121,10 @@ exec gunicorn turf.wsgi:application \
     --bind 0.0.0.0:$PORT \
     --workers 1 \
     --timeout 120 \
-    --log-level info \
+    --log-level debug \
     --access-logfile - \
     --error-logfile - \
-    --preload \
+    --capture-output \
+    --enable-stdio-inheritance \
     --max-requests 1000 \
     --max-requests-jitter 100

@@ -6,7 +6,8 @@
     "startCommand": "chmod +x start.sh && ./start.sh",
     "restartPolicyType": "ON_FAILURE",
     "restartPolicyMaxRetries": 3,
-    "healthcheckPath": "/health/",
-    "healthcheckTimeout": 300
+    "healthcheckPath": "/",
+    "healthcheckTimeout": 300,
+    "restartPolicyDelaySeconds": 10
   }
 }
