@@ -282,4 +282,4 @@ CSRF_TRUSTED_ORIGINS = [
 ]
 
 # Exempt token authentication endpoint from CSRF protection
-CSRF_EXEMPT_URLS = [r'^api-token-auth/$']
+CSRF_EXEMPT_URLS = [r'^api-token-auth/']$']
