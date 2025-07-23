@@ -3,7 +3,7 @@
     "builder": "DOCKERFILE"
   },
   "deploy": {
-    "startCommand": "chmod +x start.sh && ./start.sh",
+    "startCommand": "gunicorn turf_backend.wsgi:application --bind 0.0.0.0:8080",
     "restartPolicyType": "ON_FAILURE",
     "restartPolicyMaxRetries": 3,
     "healthcheckPath": "/",
