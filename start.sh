@@ -4,7 +4,7 @@ set -e
 echo "🚀 Starting Django application..."
 
 # Set default port if not provided
-export PORT=${PORT:-8000}
+export PORT=${PORT:-8080}
 
 # Clean up any problematic environment variables that might cause PostgreSQL errors
 unset db_type
@@ -20,6 +20,12 @@ if [ -n "$DATABASE_URL" ]; then
     echo "  DATABASE_URL: ${DATABASE_URL:0:30}..."
 else
     echo "  DATABASE_URL: Not set"
+fi
+
+# Run diagnostic script if it exists
+if [ -f "turf-backend-production.py" ]; then
+    echo "🔍 Running diagnostic script..."
+    python turf-backend-production.py
 fi
 
 # Wait for database to be ready (Railway PostgreSQL)
@@ -104,6 +110,7 @@ python manage.py collectstatic --noinput --clear
 
 # Start gunicorn
 echo "🌟 Starting Gunicorn server on port $PORT..."
+echo "🔗 Binding to 0.0.0.0:$PORT"
 exec gunicorn turf.wsgi:application \
     --bind 0.0.0.0:$PORT \
     --workers 1 \

@@ -37,6 +37,7 @@ ALLOWED_HOSTS = [
     '.railway.app',  # Railway domain
     '.up.railway.app',  # Railway custom domains
     'turf-backend-production.up.railway.app',  # Your specific Railway URL
+    '0.0.0.0',  # Allow binding to all interfaces
 ]
 
 # Add any custom domain if provided
