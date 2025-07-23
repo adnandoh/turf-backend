@@ -153,6 +153,57 @@ class BlockViewSet(ActivityViewSet, viewsets.ViewSet):
         
         return Response(status=status.HTTP_204_NO_CONTENT)
 
+    @action(detail=False, methods=['post'], url_path='block-date')
+    def block_date(self, request):
+        """
+        Block all slots for a specific date with a single API call.
+        This reduces multiple API calls and improves performance.
+        """
+        date = request.data.get('date')
+        reason = request.data.get('reason', 'Blocked by admin')
+        
+        if not date:
+            return Response({"error": "Date is required"}, status=status.HTTP_400_BAD_REQUEST)
+        
+        activity = self.get_activity()
+        
+        with transaction.atomic():
+            # Get all existing slots for this date
+            existing_slots = Slot.objects.filter(activity=activity, date=date)
+            
+            blocked_count = 0
+            errors = []
+            
+            for slot in existing_slots:
+                # Check if slot has existing bookings
+                if slot.bookings.exists():
+                    errors.append(f"Cannot block slot {slot.start_time}-{slot.end_time} (has bookings)")
+                    continue
+                
+                # Block the slot
+                slot.is_blocked = True
+                slot.block_reason = reason
+                slot.save()
+                blocked_count += 1
+            
+            if errors and blocked_count == 0:
+                return Response(
+                    {"error": "No slots could be blocked", "details": errors},
+                    status=status.HTTP_400_BAD_REQUEST
+                )
+            
+            response_data = {
+                "message": f"Successfully blocked {blocked_count} slots for {date}",
+                "blocked_count": blocked_count,
+                "date": date,
+                "reason": reason
+            }
+            
+            if errors:
+                response_data["warnings"] = errors
+            
+            return Response(response_data, status=status.HTTP_200_OK)
+
 # Cricket specific viewsets
 class CricketSlotViewSet(SlotViewSet):
     activity_name = "Cricket"
