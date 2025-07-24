@@ -12,42 +12,20 @@ https://docs.djangoproject.com/en/5.0/ref/settings/
 
 from pathlib import Path
 import os
-import dj_database_url
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
 
-
-# Quick-start development settings - unsuitable for production
-# See https://docs.djangoproject.com/en/5.0/howto/deployment/checklist/
-
 # SECURITY WARNING: keep the secret key used in production secret!
-SECRET_KEY = os.environ.get('SECRET_KEY', 'django-insecure-l0-##vkk5#unyvs0h-ojyn37ta#%$q4t5#apf8a9n7x6x(y0(=')
+SECRET_KEY = 'django-insecure-l0-##vkk5#unyvs0h-ojyn37ta#%$q4t5#apf8a9n7x6x(y0(='
 
 # SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = os.environ.get('DEBUG', 'True').lower() == 'true'
-
-# Railway deployment settings
-RAILWAY_STATIC_URL = os.environ.get('RAILWAY_STATIC_URL')
-RAILWAY_GIT_COMMIT_SHA = os.environ.get('RAILWAY_GIT_COMMIT_SHA')
+DEBUG = True
 
 ALLOWED_HOSTS = [
     'localhost',
     '127.0.0.1',
-    '.railway.app',  # Railway domain
-    '.up.railway.app',  # Railway custom domains
-    'turf-backend-production.up.railway.app',  # Your specific Railway URL
-    '0.0.0.0',  # Allow binding to all interfaces
 ]
-
-# Add any custom domain if provided
-if os.environ.get('RAILWAY_PUBLIC_DOMAIN'):
-    ALLOWED_HOSTS.append(os.environ.get('RAILWAY_PUBLIC_DOMAIN'))
-
-# Add ALLOWED_HOSTS from environment variable
-allowed_hosts_env = os.environ.get('ALLOWED_HOSTS', '')
-if allowed_hosts_env:
-    ALLOWED_HOSTS.extend([host.strip() for host in allowed_hosts_env.split(',') if host.strip()])
 
 
 # Application definition
@@ -70,7 +48,6 @@ INSTALLED_APPS = [
 MIDDLEWARE = [
     "django.middleware.security.SecurityMiddleware",
     "corsheaders.middleware.CorsMiddleware",  # CORS middleware - must be before CommonMiddleware
-    "whitenoise.middleware.WhiteNoiseMiddleware",  # WhiteNoise after security but before other middleware
     "django.contrib.sessions.middleware.SessionMiddleware",
     "django.middleware.common.CommonMiddleware",
     "django.middleware.csrf.CsrfViewMiddleware",
@@ -80,41 +57,29 @@ MIDDLEWARE = [
     "django.middleware.clickjacking.XFrameOptionsMiddleware",
 ]
 
-# CORS settings - Secure configuration with specific allowed origins only
+# CORS settings for local development
 CORS_ALLOW_ALL_ORIGINS = False
+CORS_ALLOWED_ORIGINS = [
+    "http://localhost:5173",  # Customer frontend (turf-main)
+    "http://localhost:5174",  # Admin frontend (turf-admin)
+    "http://127.0.0.1:5173",
+    "http://127.0.0.1:5174",
+]
 
-# Define allowed origins based on environment
-if DEBUG:
-    # Local development origins - only specific ports
-    CORS_ALLOWED_ORIGINS = [
-        "http://localhost:5173",  # Customer frontend (turf-main)
-        "http://localhost:5174",  # Admin frontend (turf-admin)
-        "http://127.0.0.1:5173",
-        "http://127.0.0.1:5174",
-    ]
-    
-    # Add these settings for local development
-    CORS_ALLOW_CREDENTIALS = True
-    CORS_ALLOW_HEADERS = [
-        'accept',
-        'accept-encoding',
-        'authorization',
-        'content-type',
-        'dnt',
-        'origin',
-        'user-agent',
-        'x-csrftoken',
-        'x-requested-with',
-    ]
-    # Explicitly add CORS preflight headers
-    CORS_EXPOSE_HEADERS = ['Content-Type', 'X-CSRFToken']
-    CORS_PREFLIGHT_MAX_AGE = 86400  # 24 hours
-else:
-    # Production origins - only your deployed frontends
-    CORS_ALLOWED_ORIGINS = [
-        "https://turf-customer.vercel.app",
-        "https://turf-manage.vercel.app",
-    ]
+CORS_ALLOW_CREDENTIALS = True
+CORS_ALLOW_HEADERS = [
+    'accept',
+    'accept-encoding',
+    'authorization',
+    'content-type',
+    'dnt',
+    'origin',
+    'user-agent',
+    'x-csrftoken',
+    'x-requested-with',
+]
+CORS_EXPOSE_HEADERS = ['Content-Type', 'X-CSRFToken']
+CORS_PREFLIGHT_MAX_AGE = 86400  # 24 hours
 
 CORS_ALLOW_METHODS = [
     'DELETE',
@@ -143,71 +108,18 @@ TEMPLATES = [
     },
 ]
 
-WSGI_APPLICATION = "turf.wsgi.application"
+
 
 
 # Database
 # https://docs.djangoproject.com/en/5.0/ref/settings/#databases
 
-# Database Configuration
-DATABASE_URL = os.environ.get('DATABASE_URL')
-
-if DATABASE_URL:
-    # Production/Railway environment - use PostgreSQL
-    try:
-        DATABASES = {
-            'default': dj_database_url.parse(DATABASE_URL, conn_max_age=600, conn_health_checks=True)
-        }
-        # Clean up any invalid options that might cause PostgreSQL errors
-        if 'OPTIONS' not in DATABASES['default']:
-            DATABASES['default']['OPTIONS'] = {}
-        
-        # Only add valid PostgreSQL options
-        DATABASES['default']['OPTIONS'].update({
-            'sslmode': 'require',
-            'connect_timeout': 10,
-        })
-        
-        # Remove any invalid parameters that might be causing the db_type error
-        invalid_params = ['db_type', 'type', 'database_type']
-        for param in invalid_params:
-            DATABASES['default'].pop(param, None)
-            if 'OPTIONS' in DATABASES['default']:
-                DATABASES['default']['OPTIONS'].pop(param, None)
-                
-    except Exception as e:
-        print(f"Database configuration error: {e}")
-        # Fallback configuration for Railway
-        DATABASES = {
-            'default': {
-                'ENGINE': 'django.db.backends.postgresql',
-                'NAME': os.environ.get('PGDATABASE', 'railway'),
-                'USER': os.environ.get('PGUSER', 'postgres'),
-                'PASSWORD': os.environ.get('PGPASSWORD', 'rZmXHNPYZYODBemYJHzmKllSpzjiXFjZ'),
-                'HOST': os.environ.get('PGHOST', 'postgres.railway.internal'),
-                'PORT': os.environ.get('PGPORT', '5432'),
-                'OPTIONS': {
-                    'sslmode': 'require',
-                    'connect_timeout': 10,
-                },
-            }
-        }
-else:
-    # Local development - use PostgreSQL
-    DATABASES = {
-        'default': {
-            'ENGINE': 'django.db.backends.postgresql',
-            'NAME': os.environ.get('DB_NAME', 'turf_project'),
-            'USER': os.environ.get('DB_USER', 'postgres'),
-            'PASSWORD': os.environ.get('DB_PASSWORD', 'adnan12'),
-            'HOST': os.environ.get('DB_HOST', 'localhost'),
-            'PORT': os.environ.get('DB_PORT', '5432'),
-            'OPTIONS': {
-                'client_encoding': 'UTF8',
-                'connect_timeout': 10,
-            },
-        }
+DATABASES = {
+    'default': {
+        'ENGINE': 'django.db.backends.sqlite3',
+        'NAME': BASE_DIR / 'db.sqlite3',
     }
+}
 
 
 # Password validation
@@ -245,15 +157,6 @@ USE_TZ = True
 # https://docs.djangoproject.com/en/5.0/howto/static-files/
 
 STATIC_URL = "/static/"
-STATIC_ROOT = os.path.join(BASE_DIR, 'staticfiles')
-
-# Additional locations of static files
-# STATICFILES_DIRS = [
-#     os.path.join(BASE_DIR, 'static'),
-# ]
-
-# Whitenoise for serving static files on Railway
-STATICFILES_STORAGE = 'whitenoise.storage.CompressedManifestStaticFilesStorage'
 
 # Default primary key field type
 # https://docs.djangoproject.com/en/5.0/ref/settings/#default-auto-field

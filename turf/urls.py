@@ -52,7 +52,7 @@ def health_check(request):
         'debug_info': {
             'django_version': '4.2.10',
             'environment': 'production' if not os.environ.get('DEBUG', 'True').lower() == 'true' else 'development',
-            'railway_commit': os.environ.get('RAILWAY_GIT_COMMIT_SHA', 'unknown'),
+            'git_commit': os.environ.get('GIT_COMMIT_SHA', 'unknown'),
             'allowed_hosts': os.environ.get('ALLOWED_HOSTS', 'default'),
             'database_url_set': 'yes' if os.environ.get('DATABASE_URL') else 'no',
         },
