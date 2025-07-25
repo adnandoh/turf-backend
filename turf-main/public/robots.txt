@@ -1,0 +1,25 @@
+User-agent: *
+Allow: /
+
+# Optimize crawling
+Crawl-delay: 1
+
+# Block unnecessary paths
+Disallow: /api/
+Disallow: /*.json$
+Disallow: /src/
+Disallow: /node_modules/
+Disallow: /checkout
+Disallow: /admin
+
+# Allow important pages
+Allow: /
+Allow: /about
+Allow: /contact
+Allow: /gallery
+Allow: /amenities
+Allow: /faq
+Allow: /booking-policy
+
+# Sitemap location
+Sitemap: https://turfbook.com/sitemap.xml
